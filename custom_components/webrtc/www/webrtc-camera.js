@@ -17,6 +17,7 @@ class WebRTCCamera extends VideoRTC {
 
         /**
          * @type {{
+         *     id: string?,
          *     url: string,
          *     entity: string,
          *     mode: string,
@@ -137,6 +138,32 @@ class WebRTCCamera extends VideoRTC {
         this.renderCustomUI();
         this.renderShortcuts();
         this.renderStyle();
+        this.initWindowRef();
+    }
+
+    initWindowRef() {
+        if (!this.config.id) {
+            console.warn("WebRTCCamera.initWindowRef: no id specified, no window ref created");
+            return;
+        }
+        
+        const iref = this.createWindowRefInterface();
+        if (window._hassWebRTCRefs) {
+            window._hassWebRTCRefs[this.config.id] = iref;
+        }
+        else {
+            window._hassWebRTCRefs = {};
+            window._hassWebRTCRefs[this.config.id] = iref;
+        }
+    }
+
+    createWindowRefInterface() {
+        const video = this.video;
+        return {
+            mute: function(muted) {
+                video.muted = !!muted;
+            }
+        };
     }
 
     onconnect() {
@@ -689,4 +716,3 @@ const card = {
 // Apple iOS 12 doesn't support `||=`
 if (window.customCards) window.customCards.push(card);
 else window.customCards = [card];
-
