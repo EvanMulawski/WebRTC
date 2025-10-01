@@ -73,16 +73,6 @@ class WebRTCCamera extends VideoRTC {
         this.nextStream(false);
 
         this.onhass = [];
-
-        if (this.config.muted_entity) {
-          this._unsubscribeMutedEntityListener = this.hass.connection.subscribeMessage(
-            msg => {
-              const state = this.hass.states[this.config.muted_entity];
-              this.setMuted(state?.state === "on");
-            },
-            { type: "subscribe_entities" }
-          );
-        }
     }
 
     ondisconnect() {
@@ -169,6 +159,16 @@ class WebRTCCamera extends VideoRTC {
         if (divMode === 'Loading..') return;
 
         this.setStatus('Loading..');
+
+        if (this.config.muted_entity) {
+          this._unsubscribeMutedEntityListener = this._hass.connection.subscribeMessage(
+            msg => {
+              const state = this._hass.states[this.config.muted_entity];
+              this.setMuted(state?.state === "on");
+            },
+            { type: "subscribe_entities" }
+          );
+        }
 
         this.hass.callWS({
             type: 'auth/sign_path', path: '/api/webrtc/ws'
