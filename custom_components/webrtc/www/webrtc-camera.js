@@ -17,7 +17,6 @@ class WebRTCCamera extends VideoRTC {
 
         /**
          * @type {{
-         *     id: string?,
          *     url: string,
          *     entity: string,
          *     mode: string,
@@ -35,6 +34,7 @@ class WebRTCCamera extends VideoRTC {
          *     poster: string,
          *     poster_remote: boolean,
          *     muted: boolean,
+         *     muted_entity: string?,
          *     intersection: number,
          *     ui: boolean,
          *     style: string,
@@ -73,6 +73,27 @@ class WebRTCCamera extends VideoRTC {
         this.nextStream(false);
 
         this.onhass = [];
+
+        if (this.config.muted_entity) {
+          this._unsubscribeMutedEntityListener = this.hass.connection.subscribeMessage(
+            msg => {
+              const state = this.hass.states[this.config.muted_entity];
+              this.setMuted(state?.state === "on");
+            },
+            { type: "subscribe_entities" }
+          );
+        }
+    }
+
+    ondisconnect() {
+        super.ondisconnect();
+        if (this._unsubscribeMutedEntityListener) {
+            this._unsubscribeMutedEntityListener();
+        }
+    }
+
+    setMuted(muted) {
+        this.video.muted = !!muted;
     }
 
     set hass(hass) {
@@ -138,32 +159,6 @@ class WebRTCCamera extends VideoRTC {
         this.renderCustomUI();
         this.renderShortcuts();
         this.renderStyle();
-        this.initWindowRef();
-    }
-
-    initWindowRef() {
-        if (!this.config.id) {
-            console.warn("WebRTCCamera.initWindowRef: no id specified, no window ref created");
-            return;
-        }
-        
-        const iref = this.createWindowRefInterface();
-        if (window._hassWebRTCRefs) {
-            window._hassWebRTCRefs[this.config.id] = iref;
-        }
-        else {
-            window._hassWebRTCRefs = {};
-            window._hassWebRTCRefs[this.config.id] = iref;
-        }
-    }
-
-    createWindowRefInterface() {
-        const video = this.video;
-        return {
-            mute: function(muted) {
-                video.muted = !!muted;
-            }
-        };
     }
 
     onconnect() {
@@ -294,7 +289,7 @@ class WebRTCCamera extends VideoRTC {
         const mode = this.querySelector('.mode');
         mode.addEventListener('click', () => this.nextStream(true));
 
-        if (this.config.muted) this.video.muted = true;
+        if (!this.config.muted_entity && this.config.muted) this.video.muted = true;
         if (this.config.poster_remote) this.video.poster = this.config.poster;
     }
 
