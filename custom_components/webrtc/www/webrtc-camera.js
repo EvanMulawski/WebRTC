@@ -76,7 +76,7 @@ class WebRTCCamera extends VideoRTC {
 
     set hass(hass) {
         this._hass = hass;
-        // this.onhass.forEach(fn => fn());
+        this.onhass.forEach(fn => fn());
         // if card in vertical stack - `hass` property assign after `onconnect`
         this.onconnect();
     }
