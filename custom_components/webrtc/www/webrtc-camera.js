@@ -629,9 +629,13 @@ class WebRTCCamera extends VideoRTC {
         });
 
         this.renderTemplate('shortcuts', () => {
-            shortcuts.innerHTML = this.config.shortcuts.map((value, index) => `
+            const innerHTML = this.config.shortcuts.map((value, index) => `
                 <ha-icon data-index="${index}" icon="${value.icon}" title="${value.name}"></ha-icon>
             `).join('');
+
+            if (shortcuts.innerHTML !== innerHTML) {
+                shortcuts.innerHTML = innerHTML;
+            }
         });
     }
 
